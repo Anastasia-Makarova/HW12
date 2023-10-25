@@ -148,18 +148,11 @@ class AddressBook(UserDict):
             yield islice(address_book.items(), self.idx, self.idx +n)
             self.idx += n
 
-
-
-    
-
     def __str__(self) -> str:
         return "\n".join(str(r) for r in self.data.values())
 
 
 def main():
-
-
-
     while True:
         user_input = input(">>>: ")
 
@@ -176,7 +169,8 @@ def parser(user_input: str):
         "Hello": hello_func,
         "Add": add_func,
         "Change": change_func,
-        "Phone": search_func,
+        "Search": search_func,
+        "Phone": search_by_name_func,
         "Show All": show_func,
         "Show Iterated": iter_func,
         "Del": delete_func 
@@ -247,15 +241,30 @@ def iter_func(*args):
     return "End of the phone book"
 
 
-
 @deco_error
-def search_func(*args):
+def search_by_name_func(*args):
     name = args[0]
     record = address_book.find(name)
     if record:
         return str(record)
     else:
         raise KeyError
+
+@deco_error    
+def search_func(*args):
+    key = str(args[0])
+    if len(key) < 2:
+        raise ValueError
+    else:
+        result = []
+        for line in address_book.data.values():
+            raw_phones =  " ".join(str(phone) for phone in line.phones)
+            row = f"{str(line.name)} {str(raw_phones)}" 
+            row = row.lower()
+            key = key.lower()
+            if  row.find(key) != -1:
+                result.append(line)
+        return "\n".join(str(rec) for rec in result)
 
 
 @deco_error
@@ -272,17 +281,18 @@ def hello_func():
 
 
 def load_from_file():
-    filename = "contacts.txt"
+    filename = "contacts.bin"
     with open (filename, "rb") as file:
         address_book = pickle.load(file)
     return address_book
 
+
 def save_to_file():
-    filename = "contacts.txt"
+    filename = "contacts.bin"
     with open (filename, "wb") as file:
         pickle.dump(address_book, file)
 
-stat = os.stat("contacts.txt")
+stat = os.stat("contacts.bin")
 size = stat.st_size
 if size > 0:
     address_book = AddressBook(load_from_file())
@@ -290,4 +300,4 @@ else:
     address_book = AddressBook()
 
 if __name__ == '__main__':
-    main()
+    main()   
